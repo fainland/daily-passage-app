@@ -7,6 +7,7 @@ from supabase import create_client
 from scipy.spatial.distance import cosine
 from dotenv import load_dotenv
 from flask import Flask, jsonify
+from datetime import datetime, timedelta
 
 load_dotenv()
 
@@ -21,6 +22,14 @@ supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 EMBEDDING_MODEL = "text-embedding-ada-002"
 GENERATION_MODEL = "gpt-4"
+
+def get_today_passage():
+    today_start = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0).isoformat()
+    result = supabase.table("passages").select("passage_text").gte("created_at", today_start).execute()
+
+    if result.data:
+        return result.data[0]["passage_text"]
+    return None
 
 def get_prompt_variation():
     variations = [
@@ -134,6 +143,12 @@ app = Flask(__name__)
 
 @app.route("/generate-passage", methods=["GET"])
 def generate():
+    # Check if there's already a passage stored today
+    existing_passage = get_today_passage()
+    if existing_passage:
+        return jsonify({"passage": existing_passage})
+
+    # Try to generate a unique new passage
     MAX_TRIES = 5
     for attempt in range(MAX_TRIES):
         new_passage = generate_passage()
