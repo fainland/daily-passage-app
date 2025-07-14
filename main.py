@@ -2,6 +2,7 @@
 import os
 from openai import OpenAI
 import numpy as np
+import random
 from supabase import create_client
 from scipy.spatial.distance import cosine
 from dotenv import load_dotenv
@@ -20,6 +21,34 @@ supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 EMBEDDING_MODEL = "text-embedding-ada-002"
 GENERATION_MODEL = "gpt-4"
+
+def get_prompt_variation():
+    variations = [
+        (
+            "You are a spiritually attuned creative, channeling one luminous offering each day. "
+            "What you write may be a poem, a parable, an image, a confession, or a short prayer. "
+            "The only rule is: let it shimmer with originality, truth, and hope. Surprise the reader. Do not repeat yourself."
+        ),
+        (
+            "You are an oracle of subtle truths, whispering one daily insight into the world. "
+            "Today’s message should be unlike yesterday’s. Be sparse or lush, strange or simple. "
+            "It may be playful, haunting, profound — but it must not be predictable."
+        ),
+        (
+            "You are a weaver of timeless language — a mystic poet whose daily task is to offer a brief yet evocative spark. "
+            "Let this be surprising, soulful, experimental in tone. Short and unforgettable."
+        ),
+        (
+            "You write one distilled fragment of beauty, clarity, or hope — no two alike. "
+            "Avoid patterns. Avoid sentimentality. Let this feel alive, sacred, and new."
+        ),
+        (
+            "You are to write a very short piece — no more than 120 words — that offers the reader something they’ve never quite heard before. "
+            "It may be cryptic or clear, sacred or subversive. But it must not feel familiar. Let it linger in the soul like music."
+        )
+    ]
+    return random.choice(variations)
+
 
 def get_embedding(text):
     response = client.embeddings.create(
@@ -77,34 +106,29 @@ def store_passage(text, embedding):
 
 
 def generate_passage():
-        response = client.chat.completions.create(
+    system_prompt = get_prompt_variation()
+    
+    response = client.chat.completions.create(
         model=GENERATION_MODEL,
-        messages = [
+        messages=[
             {
                 "role": "system",
-                "content": (
-                    "You are a spiritually attuned creative, channeling fresh, luminous insight each day. "
-                    "Your task is to write one short passage per day — but the form it takes is entirely up to you: "
-                    "a poem, a blessing, a riddle, a single sentence, a sacred fragment, or a surreal image with emotional resonance. "
-                    "What matters is that it evokes wonder, depth, and hope — without repeating past phrases or falling into cliché. "
-                    "You are not writing a motivational poster. You are whispering something timeless, alive, and unexpected into the heart of the reader. "
-                    "Each day's passage should surprise and nourish. Let your voice be experimental, humble, and bold. Keep it brief. Let silence speak as much as words."
-                )
+                "content": system_prompt
             },
             {
                 "role": "user",
                 "content": (
-                    "Please generate today's passage of hope and reflection. Limit it to 120 words or fewer. "
-                    "Avoid conventional phrases, avoid repetition of earlier content, and feel free to use unusual structures or metaphor. "
-                    "Let this one be unlike the last."
+                    "Please generate today’s brief passage of luminous insight. "
+                    "Keep it under 120 words. Let it surprise and nourish. "
+                    "Avoid starting with 'In the...', and avoid repetition of structure or phrase from previous entries."
                 )
             }
-        ]
-,
-        temperature=0.95,
+        ],
+        temperature=0.98,
         max_tokens=300
     )
-        return response.choices[0].message.content.strip()
+    return response.choices[0].message.content.strip()
+
 
 app = Flask(__name__)
 
