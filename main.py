@@ -1,4 +1,3 @@
-
 import os
 from openai import OpenAI
 import numpy as np
@@ -10,8 +9,9 @@ from flask import Flask, jsonify
 from datetime import datetime, timedelta
 from flask_cors import CORS
 
+# Initialize Flask app ONCE and apply CORS immediately
 app = Flask(__name__)
-CORS(app, origins="*")  # 👈 This enables CORS for all routes
+CORS(app, origins="*") # This correctly enables CORS for all routes on this 'app' instance
 
 load_dotenv()
 
@@ -80,32 +80,29 @@ def is_similar(new_emb, existing_embs, threshold=0.90):
     return False
 
 
-
 def fetch_existing_embeddings():
-        result = supabase.table("passages").select("embedding").execute()
-        cleaned = []
+    result = supabase.table("passages").select("embedding").execute()
+    cleaned = []
 
-        for row in result.data:
-            emb = row.get('embedding')
+    for row in result.data:
+        emb = row.get('embedding')
 
-            # Skip if embedding is missing or malformed
-            if not emb or not isinstance(emb, list):
-                continue
+        # Skip if embedding is missing or malformed
+        if not emb or not isinstance(emb, list):
+            continue
 
-            # If embedding is nested (e.g., [[...]]), extract the inner list
-            if isinstance(emb[0], list):
-                emb = emb[0]
+        # If embedding is nested (e.g., [[...]]), extract the inner list
+        if isinstance(emb[0], list):
+            emb = emb[0]
 
-            vec = np.array(emb, dtype=np.float32).flatten()
+        vec = np.array(emb, dtype=np.float32).flatten()
 
-            if vec.shape == (1536,):  # sanity check
-                cleaned.append(vec)
-            else:
-                print("⚠️ Skipping malformed embedding with shape:", vec.shape)
+        if vec.shape == (1536,): # sanity check
+            cleaned.append(vec)
+        else:
+            print("⚠️ Skipping malformed embedding with shape:", vec.shape)
 
-        return cleaned
-
-
+    return cleaned
 
 
 def store_passage(text, embedding):
@@ -143,8 +140,6 @@ def generate_passage():
     return response.choices[0].message.content.strip()
 
 
-app = Flask(__name__)
-
 @app.route("/generate-passage", methods=["GET"])
 def generate():
     # Check if there's already a passage stored today
@@ -175,7 +170,7 @@ def root():
 #if __name__ == "__main__":
 #    app.run(host="0.0.0.0", port=8080)
 
-# --- MAIN LOGIC ---
+# --- MAIN LOGIC (commented out as it's not part of the Flask app's routes) ---
 #MAX_TRIES = 5
 #for attempt in range(MAX_TRIES):
 #    new_passage = generate_passage()
