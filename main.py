@@ -11,7 +11,7 @@ from datetime import datetime, timedelta
 from flask_cors import CORS
 
 app = Flask(__name__)
-CORS(app)  # 👈 This enables CORS for all routes
+CORS(app, origins="*")  # 👈 This enables CORS for all routes
 
 load_dotenv()
 
