@@ -5,3 +5,4 @@ supabase
 scipy
 python-dotenv
 gunicorn
+flask-cors
