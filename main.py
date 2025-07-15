@@ -8,8 +8,12 @@ from scipy.spatial.distance import cosine
 from dotenv import load_dotenv
 from flask import Flask, jsonify
 from datetime import datetime, timedelta
+from flask_cors import CORS
 
 load_dotenv()
+
+app = Flask(__name__)
+CORS(app)  # 👈 This enables CORS for all routes
 
 # Initialize OpenAI client
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
